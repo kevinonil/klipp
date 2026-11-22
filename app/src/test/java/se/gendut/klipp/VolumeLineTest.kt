@@ -44,7 +44,7 @@ class VolumeLineTest {
         assertEquals(-20f, lv.at(9f), 0f)
     }
 
-    /** A1 (0–8 s "intervju L"): the track starts below the eight video tracks, 44 × 1.6 dp tall with the lines on. */
+    /** A1 (0–8 s "intervju L"): five empty video lanes are compact; V3, V2, V1 and A1 remain full-height, with A1 expanded for its volume line. */
     private val clipTop = 212f + 3f
     private val clipH = 44f * VOL_TRACK_SCALE - 6f
     private fun yOfDb(db: Float): Float { val bt = clipTop + 17f; val bb = clipTop + clipH - 3f; return bb - ClipLevel.pos(db) * (bb - bt) }
