@@ -1006,7 +1006,7 @@ class ProgramPlayback(private val context: Context) {
         val q = s.sequence ?: return ""
         val sb = StringBuilder()
         sb.append(playerLook).append(master).append(hdrCodecFailed).append(LiveGrades.structure(grades).hashCode()).append('#').append(q.width).append('x').append(q.height).append(q.captions).append('#')
-        for (t in q.video.take(3) + q.audio.take(3)) {
+        for (t in q.video.take(se.gendut.klipp.VIDEO_TRACK_COUNT) + q.audio.take(se.gendut.klipp.AUDIO_TRACK_COUNT)) {
             sb.append(t.id).append(t.enabled).append(t.muted).append(t.solo).append(t.volumeDb).append(t.transitions).append(t.volKf).append(t.autoMode).append('|')
             // the audio effects' values change live in the chains (no rebuild) – only which effects exist counts
             for (c in t.clips) sb.append(c.copy(afx = c.afx.map { it.copy(params = emptyMap()) })).append(':').append(uriOf(c.item)?.let { Proxies.videoUri(it) }).append(';')
