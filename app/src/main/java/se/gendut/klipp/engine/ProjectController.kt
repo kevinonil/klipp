@@ -1997,7 +1997,7 @@ class ProjectController(
             }
             // the default length from settings (credits rolls twice as long)
             val seconds = se.gendut.klipp.AppPrefs.titleSeconds(context).toDouble() * if (l.template == TitleTemplate.ROLL) 2 else 1
-            // a place the timeline shows (V1–V3), free for the whole title – else say why and make nothing
+            // a place the timeline shows (V1–V8), free for the whole title – else say why and make nothing
             val fps = snapshot.fps.coerceAtLeast(1.0)
             fun f(sec: Double) = Math.round(sec * fps)
             val place = titlePlace(
