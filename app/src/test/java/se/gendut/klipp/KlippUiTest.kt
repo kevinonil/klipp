@@ -47,7 +47,7 @@ class KlippUiTest {
         return Offset(sec * 16f * d, (28f + trackCenterDp) * d)
     }
 
-    private val v1Center = 80f + 26f
+    private val v1Center = 7 * 40f + 26f
 
     @Test
     fun editorRendersAndClipSnapsAndRipples() {
@@ -115,7 +115,7 @@ class KlippUiTest {
         rule.waitForIdle()
         tl.performTouchInput { click(pt(4f, v1Center)) }
         rule.waitForIdle()
-        val parts = state.clips.filter { it.track == 2 && it.name == "A003_intervju" && it.start < 8f }
+        val parts = state.clips.filter { it.track == 7 && it.name == "A003_intervju" && it.start < 8f }
         assertEquals(2, parts.size)
         assertEquals(4f, parts.maxOf { it.start }, 0.05f)
         rule.onRoot().captureRoboImage("$dir/05_rakblad.png")
@@ -283,7 +283,7 @@ class KlippUiTest {
         // tap the V2 header → V2 becomes the target track
         rule.onNodeWithText("V2").performClick()
         rule.waitForIdle()
-        assertEquals(1, state.targetVideo)
+        assertEquals(6, state.targetVideo)
         // marker at the playhead (14 s)
         rule.onNode(androidx.compose.ui.test.hasContentDescription("Lägg till markör")).performClick()
         rule.waitForIdle()
@@ -330,13 +330,13 @@ class KlippUiTest {
         rule.onNodeWithTag("timeline").performTouchInput {
             val from = Offset(width * 0.9f, height * 0.5f)
             down(from)
-            for (i in 1..15) moveTo(Offset(from.x, from.y - 140f * density * i / 15))
+            for (i in 1..15) moveTo(Offset(from.x, from.y - 500f * density * i / 15))
             up()
         }
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("$dir/19_rulla_efter.png")
         // after scrolling: a tap lower down hits the A3 music (which was off screen before)
-        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.65f)) }
+        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.9f)) }
         rule.waitForIdle()
         assertEquals("the A3 clip can be selected after scrolling", 11L, state.selected)
     }
