@@ -45,7 +45,7 @@ class TimelineTransitionTest {
 
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
-        return Offset((68f + sec * 16f) * d, (28f + compactTrackY(yDp)) * d)
+        return Offset(sec * 16f * d, (28f + compactTrackY(yDp)) * d)
     }
 
     private fun setUp(fake: FakeProps, init: EditorState.() -> Unit = {}): EditorState {
