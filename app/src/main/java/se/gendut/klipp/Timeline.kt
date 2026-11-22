@@ -192,7 +192,7 @@ fun Timeline(state: EditorState, tool: Tool, modifier: Modifier = Modifier) {
     /** The track a dragged clip is over right now (a slim lane opens under it). */
     var hoverTrack by remember { mutableIntStateOf(-1) }
     for (i in TRACKS.indices) {
-        val full = i == 2 || i == 3 || i == state.targetVideo || i == state.targetAudio || i == hoverTrack ||
+        val full = i == VIDEO_TRACK_COUNT - 1 || i == VIDEO_TRACK_COUNT || i == state.targetVideo || i == state.targetAudio || i == hoverTrack ||
             state.clips.any { it.track == i && it.id !in state.removing }
         // volume lines: taller audio tracks, so the line has room to be dragged
         val tall = state.volLines && TRACKS[i].kind == TrackKind.AUDIO
@@ -291,7 +291,7 @@ fun Timeline(state: EditorState, tool: Tool, modifier: Modifier = Modifier) {
         return heightsPx[i] + (heightsPx[j] - heightsPx[i]) * f
     }
     fun trackAt(y: Float, kind: TrackKind): Int {
-        val range = if (kind == TrackKind.VIDEO) 0..2 else 3..5
+        val range = if (kind == TrackKind.VIDEO) 0 until VIDEO_TRACK_COUNT else VIDEO_TRACK_COUNT until VIDEO_TRACK_COUNT + AUDIO_TRACK_COUNT
         var best = range.first
         var bestD = Float.MAX_VALUE
         for (i in range) {
@@ -1814,7 +1814,7 @@ fun Timeline(state: EditorState, tool: Tool, modifier: Modifier = Modifier) {
                 // track volume automation (yellow line with keyframes, as in Premiere): +6 dB at the top, −60 dB at the bottom
                 state.trackVolKf.forEachIndexed { k, kfs ->
                     if (kfs.isEmpty()) return@forEachIndexed
-                    val ti = 3 + k
+                    val ti = VIDEO_TRACK_COUNT + k
                     val top = rulerPx + yOf(ti.toFloat()) - scrollY
                     val h = hOf(ti.toFloat())
                     if (top + h < rulerPx || top > size.height) return@forEachIndexed
