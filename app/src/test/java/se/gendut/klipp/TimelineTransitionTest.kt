@@ -61,7 +61,7 @@ class TimelineTransitionTest {
         val st = setUp(fake) { selected = 2L } // B-roll 8–13 s on V1, A003 ends at 8 s
         rule.onRoot().captureRoboImage("$dir/25_toningshandtag.png")
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = pt(8.3f, 306f)
+            val from = pt(8.3f, 290f)
             down(from)
             for (i in 1..12) moveTo(Offset(from.x + 16f * density * 2f * i / 12, from.y))
         }
@@ -81,7 +81,7 @@ class TimelineTransitionTest {
         val fake = FakeProps()
         setUp(fake) { selected = 1L } // A003 0–8 s, nothing before
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = pt(0.3f, 306f)
+            val from = pt(0.3f, 290f)
             down(from)
             for (i in 1..12) moveTo(Offset(from.x + 16f * density * 2f * i / 12, from.y))
             up()
@@ -154,7 +154,7 @@ class TimelineTransitionTest {
         val fake = FakeProps()
         setUp(fake) { selected = 7L } // the first audio clip on A1 (0–8 s)
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = pt(0.3f, 354f) // A1 starts 132 dp down
+            val from = pt(0.3f, 342f) // A1 starts 132 dp down
             down(from)
             for (i in 1..12) moveTo(Offset(from.x + 16f * density * 2f * i / 12, from.y))
             up()
