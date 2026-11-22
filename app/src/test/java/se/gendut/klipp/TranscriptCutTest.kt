@@ -26,7 +26,7 @@ class TranscriptCutTest {
 
     @Test fun tracksNeitherTargetedNorSyncLockedOrLockedStay() {
         val states = List(TRACKS.size) { i -> when (i) { 6 -> TrackState(syncLock = false); 9 -> TrackState(locked = true); else -> TrackState() } }
-        val c = transcriptCut(3f, 4f, f, clips, states, 2, 3, emptyList())
+        val c = transcriptCut(3f, 4f, f, clips, states, 7, 8, emptyList())
         assertEquals(listOf("V1", "A1"), c.tracks)
         assertEquals(listOf("V2", "A2"), c.untouched)
         assertEquals(2, c.clips)
