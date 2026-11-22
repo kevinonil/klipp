@@ -53,7 +53,7 @@ class KlippUiTest {
 
     private fun pt(sec: Float, trackCenterDp: Float): Offset {
         val d = rule.density.density
-        return Offset((68f + sec * 16f) * d, (28f + compactTrackY(trackCenterDp)) * d)
+        return Offset(sec * 16f * d, (28f + compactTrackY(trackCenterDp)) * d)
     }
 
     private val v1Center = 306f
