@@ -22,8 +22,8 @@ class LinkedMoveTest {
     }
 
     private fun state(): Pair<EditorState, Rec> {
-        val v = Clip(1, "cam", ClipKind.VIDEO, 2, 0f, 10f, 0f, 10f, 0, link = 7)
-        val a = Clip(2, "cam", ClipKind.AUDIO, 3, 0f, 10f, 0f, 10f, 0, link = 7)
+        val v = Clip(1, "cam", ClipKind.VIDEO, 7, 0f, 10f, 0f, 10f, 0, link = 7)
+        val a = Clip(2, "cam", ClipKind.AUDIO, 8, 0f, 10f, 0f, 10f, 0, link = 7)
         val st = EditorState(listOf(v, a))
         val r = Rec()
         st.backend = r
@@ -32,26 +32,26 @@ class LinkedMoveTest {
 
     @Test fun videoUpTakesTheAudioDown() {
         val (st, r) = state()
-        st.moveClip(st.clips[0], 3f, 0, insert = false)
+        st.moveClip(st.clips[0], 3f, 5, insert = false)
         assertEquals(listOf("1 3.0 V3; 2 3.0 A3"), r.log)
     }
 
     @Test fun audioDownTakesTheVideoUp() {
         val (st, r) = state()
-        st.moveClip(st.clips[1], 1f, 4, insert = false)
+        st.moveClip(st.clips[1], 1f, 9, insert = false)
         assertEquals(listOf("2 1.0 A2; 1 1.0 V2"), r.log)
     }
 
     @Test fun sameTrackIsAPlainMove() {
         val (st, r) = state()
-        st.moveClip(st.clips[0], 5f, 2, insert = false)
+        st.moveClip(st.clips[0], 5f, 7, insert = false)
         assertEquals(listOf("move 1 5.0 V1"), r.log)
     }
 
     @Test fun withoutLinkedSelectionOnlyTheClipMoves() {
         val (st, r) = state()
         st.linkedSelection = false
-        st.moveClip(st.clips[0], 3f, 1, insert = false)
+        st.moveClip(st.clips[0], 3f, 6, insert = false)
         assertEquals(listOf("move 1 3.0 V2"), r.log)
     }
 }
