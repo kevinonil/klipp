@@ -37,7 +37,7 @@ class TimelineTransitionTest {
     /** Convert the original full-height track coordinates to the current compact empty-lane layout. */
     private fun compactTrackY(yDp: Float): Float {
         val oldBounds = floatArrayOf(0f, 40f, 80f, 120f, 160f, 200f, 240f, 280f, 332f, 376f, 420f, 464f)
-        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 120f, 160f, 212f, 256f, 300f, 344f)
+        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 96f, 112f, 152f, 196f, 212f, 228f)
         val row = (0 until oldBounds.lastIndex).firstOrNull { yDp < oldBounds[it + 1] } ?: oldBounds.lastIndex - 1
         val fraction = ((yDp - oldBounds[row]) / (oldBounds[row + 1] - oldBounds[row])).coerceIn(0f, 1f)
         return newBounds[row] + fraction * (newBounds[row + 1] - newBounds[row])
@@ -183,7 +183,7 @@ class TimelineTransitionTest {
         // right next to the edit point at 8 s (A003 | B-roll on V1): the edit point, not the clip – even when the clip is selected
         rule.onNodeWithTag("timeline").performTouchInput { down(pt(7.6f, 306f)); up() }
         rule.waitForIdle()
-        assertEquals(UiCut(2, 8f, 1L, 2L), st.selectedCut)
+        assertEquals(UiCut(7, 8f, 1L, 2L), st.selectedCut)
         assertEquals(null, st.selected)
         rule.onNodeWithTag("cutbar").assertIsDisplayed()
         rule.onRoot().captureRoboImage("$dir/28_klippning_markerad.png")
