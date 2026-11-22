@@ -45,7 +45,7 @@ class KlippUiTest {
     /** Convert the original full-height track coordinates to the current compact empty-lane layout. */
     private fun compactTrackY(yDp: Float): Float {
         val oldBounds = floatArrayOf(0f, 40f, 80f, 120f, 160f, 200f, 240f, 280f, 332f, 376f, 420f, 464f)
-        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 120f, 160f, 212f, 256f, 300f, 344f)
+        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 96f, 112f, 164f, 208f, 224f, 240f)
         val row = (0 until oldBounds.lastIndex).firstOrNull { yDp < oldBounds[it + 1] } ?: oldBounds.lastIndex - 1
         val fraction = ((yDp - oldBounds[row]) / (oldBounds[row + 1] - oldBounds[row])).coerceIn(0f, 1f)
         return newBounds[row] + fraction * (newBounds[row + 1] - newBounds[row])
@@ -337,7 +337,7 @@ class KlippUiTest {
         rule.onRoot().captureRoboImage("$dir/18_rulla_fore.png")
         // drag up on empty space (the V2 lane after 20 s) → scrolls down
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = Offset(width * 0.9f, height * 0.5f)
+            val from = Offset(34f * density, height * 0.5f)
             down(from)
             for (i in 1..15) moveTo(Offset(from.x, from.y - 500f * density * i / 15))
             up()
@@ -345,7 +345,7 @@ class KlippUiTest {
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("$dir/19_rulla_efter.png")
         // after scrolling: a tap lower down hits the A3 music (which was off screen before)
-        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.2f)) }
+        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.48f)) }
         rule.waitForIdle()
         assertEquals("the A3 clip can be selected after scrolling", 11L, state.selected)
     }
