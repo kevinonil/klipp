@@ -42,12 +42,21 @@ class KlippUiTest {
     }
 
     /** A point in timeline coordinates (dp → px). pps = 16 dp/s, ruler 28 dp. */
-    private fun pt(sec: Float, trackCenterDp: Float): Offset {
-        val d = rule.density.density
-        return Offset(sec * 16f * d, (28f + trackCenterDp) * d)
+    /** Convert the original full-height track coordinates to the current compact empty-lane layout. */
+    private fun compactTrackY(yDp: Float): Float {
+        val oldBounds = floatArrayOf(0f, 40f, 80f, 120f, 160f, 200f, 240f, 280f, 332f, 376f, 420f, 464f)
+        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 120f, 160f, 212f, 256f, 300f, 344f)
+        val row = (0 until oldBounds.lastIndex).firstOrNull { yDp < oldBounds[it + 1] } ?: oldBounds.lastIndex - 1
+        val fraction = ((yDp - oldBounds[row]) / (oldBounds[row + 1] - oldBounds[row])).coerceIn(0f, 1f)
+        return newBounds[row] + fraction * (newBounds[row + 1] - newBounds[row])
     }
 
-    private val v1Center = 7 * 40f + 26f
+    private fun pt(sec: Float, trackCenterDp: Float): Offset {
+        val d = rule.density.density
+        return Offset(sec * 16f * d, (28f + compactTrackY(trackCenterDp)) * d)
+    }
+
+    private val v1Center = 186f
 
     @Test
     fun editorRendersAndClipSnapsAndRipples() {
