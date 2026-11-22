@@ -21,7 +21,7 @@ import androidx.media3.effect.StaticOverlaySettings
 /*
  * How the program image is built (0.8):
  *
- *  - Image layers = video tracks with real video clips (V3 → V2 → V1, top first), plus a separate layer for
+ *  - Image layers = video tracks with real video clips (V8 → V7 → … → V1, top first), plus a separate layer for
  *    cross dissolves above the track they belong to. Media3's multi-layer compositor is used only when there
  *    is more than one layer; otherwise everything goes through the ordinary simple path.
  *  - Titles and captions are placed on top of the whole image as an overlay effect on the composition, so they
