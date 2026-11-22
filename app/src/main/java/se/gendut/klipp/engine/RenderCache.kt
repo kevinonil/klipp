@@ -298,7 +298,7 @@ object RenderCache {
      * (see [playPlan]).
      */
     fun transitionWindows(s: Snapshot): List<ClosedFloatingPointRange<Double>> =
-        s.playable().sequence?.video.orEmpty().take(3).filter { it.enabled }.flatMap { t ->
+        s.playable().sequence?.video.orEmpty().take(se.gendut.klipp.VIDEO_TRACK_COUNT).filter { it.enabled }.flatMap { t ->
             val byId = t.clips.associateBy { it.id }
             t.transitions.filter { x ->
                 x.duration > 1e-6 && x.from?.let { byId[it] }?.text == null && x.to?.let { byId[it] }?.text == null &&
