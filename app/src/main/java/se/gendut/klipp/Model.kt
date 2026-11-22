@@ -1144,17 +1144,17 @@ class EditorState(initial: List<Clip> = initialClips()) {
             fun v(name: String, track: Int, s: Float, l: Float, scene: Int, kind: ClipKind = ClipKind.VIDEO) =
                 Clip(id++, name, kind, track, s, l, 2f, l + 6f, scene)
             return listOf(
-                v("A003_intervju", 2, 0f, 8f, 0),
-                v("B-roll_hamn", 2, 8f, 5f, 1),
+                v("A003_intervju", 7, 0f, 8f, 0),
+                v("B-roll_hamn", 7, 8f, 5f, 1),
                 v("A003_intervju", 2, 13f, 9f, 0),
-                v("C012_marknad", 2, 22f, 8f, 3),
-                v("Justering", 1, 4f, 5f, 0, ClipKind.ADJUST),
-                v("Namnskylt", 0, 15f, 5f, 0, ClipKind.TITLE),
-                v("intervju L", 3, 0f, 8f, 0, ClipKind.AUDIO),
+                v("C012_marknad", 7, 22f, 8f, 3),
+                v("Justering", 6, 4f, 5f, 0, ClipKind.ADJUST),
+                v("Namnskylt", 5, 15f, 5f, 0, ClipKind.TITLE),
+                v("intervju L", 8, 0f, 8f, 0, ClipKind.AUDIO),
                 v("intervju L", 3, 13f, 9f, 0, ClipKind.AUDIO),
-                v("hamn_amb", 4, 8f, 5f, 1, ClipKind.AUDIO),
-                v("marknad_amb", 4, 22f, 8f, 3, ClipKind.AUDIO),
-                v("Musik_tema", 5, 1f, 28f, 0, ClipKind.MUSIC),
+                v("hamn_amb", 9, 8f, 5f, 1, ClipKind.AUDIO),
+                v("marknad_amb", 9, 22f, 8f, 3, ClipKind.AUDIO),
+                v("Musik_tema", 10, 1f, 28f, 0, ClipKind.MUSIC),
             )
         }
     }
