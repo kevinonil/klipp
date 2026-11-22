@@ -508,7 +508,7 @@ class EditToolsTest {
         rule.waitForIdle()
         assertEquals(8f, st.clips.first { it.id == 2L }.start, 1e-4f)
         // audio track: mute via the menu
-        rule.onNodeWithTag("trackHeader:A2").performScrollTo().performTouchInput { longClick() }
+        rule.onNodeWithTag("trackHeader:A2").performTouchInput { longClick() }
         rule.waitForIdle()
         rule.onNodeWithTag("trackFlag:A2:muted").performClick()
         rule.waitForIdle()
