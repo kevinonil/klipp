@@ -33,7 +33,7 @@ class PlayPlanTest {
         val sourceClip = video.getJSONObject(0).getJSONArray("clips").getJSONObject(0)
         val template = video.getJSONObject(0)
         // The fixture has V1–V3. Add V4–V8 with real clips, as an eight-layer edit would have.
-        for (number in 4..8) {
+        for (number in 2..8) {
             val clip = JSONObject(sourceClip.toString())
                 .put("id", 100L + number)
                 .put("start", 0.0)
@@ -43,7 +43,7 @@ class PlayPlanTest {
                 .put("name", "Video $number")
                 .put("clips", JSONArray().put(clip))
                 .put("transitions", JSONArray())
-            video.put(track)
+            if (number <= 3) video.getJSONObject(number - 1).put("clips", JSONArray().put(clip)) else video.put(track)
         }
         val snapshot = Snapshot.parse(o)
         val plan = LayerPlanner.plan(snapshot) { 30.0 }!!
