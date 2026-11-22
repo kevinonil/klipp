@@ -36,7 +36,7 @@ class EditToolsTest {
     val rule = createComposeRule()
     private val dir = "build/shots"
 
-    /** Second and height in dp below the ruler (V3 0, V2 40, V1 80, A1 132, A2 176, A3 220). pps = 16 dp/s. */
+    /** Second and height in dp below the ruler (V8 20, V7 60, V6 100, V5 140, V4 180, V3 220, V2 260, V1 306, A1 354, A2 398, A3 442). pps = 16 dp/s. */
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
         return Offset(sec * 16f * d, (28f + yDp) * d)
@@ -77,16 +77,16 @@ class EditToolsTest {
 
     @Test fun razorCutsOnlyCrossingClipsOnTheTracks() {
         val clips = EditorState.initialClips()
-        val cut = TimelineTools.razorCuts(clips, 11f, 2..5).map { it.id }.toSet()
+        val cut = TimelineTools.razorCuts(clips, 11f, 7..10).map { it.id }.toSet()
         assertEquals(setOf(2L, 9L, 11L), cut) // B-roll (V1), hamn_amb (A2), music (A3) – A1 has a gap
-        assertTrue("no cut at a clip edge", TimelineTools.razorCuts(clips, 8f, 2..2).isEmpty())
+        assertTrue("no cut at a clip edge", TimelineTools.razorCuts(clips, 8f, 7..7).isEmpty())
     }
 
     @Test fun lassoSelectionLinkedAndMulti() {
         val clips = listOf(
-            Clip(1, "A", ClipKind.VIDEO, 2, 0f, 5f, 0f, 10f, 0, link = 7),
-            Clip(2, "A", ClipKind.AUDIO, 3, 0f, 5f, 0f, 10f, 0, link = 7),
-            Clip(3, "B", ClipKind.VIDEO, 2, 5f, 5f, 0f, 10f, 0),
+            Clip(1, "A", ClipKind.VIDEO, 7, 0f, 5f, 0f, 10f, 0, link = 7),
+            Clip(2, "A", ClipKind.AUDIO, 8, 0f, 5f, 0f, 10f, 0, link = 7),
+            Clip(3, "B", ClipKind.VIDEO, 7, 5f, 5f, 0f, 10f, 0),
         )
         val st = EditorState(clips)
         // only the audio is caught: linked selection brings the video along = ordinary selection of the video clip
@@ -125,17 +125,17 @@ class EditToolsTest {
         val st = EditorState().apply { backend = be }
         st.lassoSelect(setOf(2L, 9L))
         st.moveMarked(2f, insert = false)
-        assertEquals("moveMany 2@10.0/2,9@10.0/4 false", log.last())
+        assertEquals("moveMany 2@10.0/7,9@10.0/9 false", log.last())
         // cannot move before zero: the whole group stops at 0 (already there = no call)
         st.lassoSelect(setOf(2L, 3L))
         st.moveMarked(-10f, insert = true)
-        assertEquals("moveMany 2@0.0/2,3@5.0/2 true", log.last())
+        assertEquals("moveMany 2@0.0/7,3@5.0/7 true", log.last())
         val n = log.size
         st.lassoSelect(setOf(1L, 2L))
         st.moveMarked(-5f, insert = false)
         assertEquals(n, log.size)
         assertEquals(3, st.razorAcross(11f, 2..5))
-        assertEquals("razor 11.0 [2, 4, 5]", log.last())
+        assertEquals("razor 11.0 [7, 9, 10]", log.last())
         assertEquals("nothing to cut", 0, st.razorAcross(8f, 2..2))
         // delete several: one call when all animations are done
         st.lassoSelect(setOf(2L, 9L))
@@ -160,7 +160,7 @@ class EditToolsTest {
         // the razor: three cuts, one undo step
         assertEquals(3, st.razorAcross(11f, 2..5))
         assertEquals(before.size + 3, st.clips.size)
-        val right = st.clips.first { it.track == 2 && it.start == 11f }
+        val right = st.clips.first { it.track == 7 && it.start == 11f }
         assertEquals(before.first { it.id == 2L }.srcIn + 3f, right.srcIn, 1e-4f)
         st.undo()
         assertEquals(before, st.clips)
@@ -177,8 +177,8 @@ class EditToolsTest {
         rule.mainClock.advanceTimeBy(800)
         // selection box: diagonally from V2 (10.5 s) down to A2 (12.7 s)
         tl.performTouchInput {
-            val from = pt(10.5f, 70f)
-            val to = pt(12.7f, 200f)
+            val from = pt(10.5f, 260f)
+            val to = pt(12.7f, 398f)
             for (i in 1..10) moveTo(from + (to - from) * (i / 10f))
         }
         rule.mainClock.advanceTimeBy(100)
@@ -191,7 +191,7 @@ class EditToolsTest {
         rule.onRoot().captureRoboImage("$dir/61_lasso_markerat.png")
         // drag one of them: both move by the same amount, the tracks are kept
         tl.performTouchInput {
-            val from = pt(10f, 106f)
+            val from = pt(10f, 306f)
             down(from)
             for (i in 1..10) moveTo(Offset(from.x + 16f * density * 2.5f * i / 10, from.y + 30f * density * i / 10))
             up()
@@ -201,8 +201,8 @@ class EditToolsTest {
         val a = st.clips.first { it.id == 9L }
         assertEquals(b.start, a.start, 1e-3f)
         assertEquals(10.5f, b.start, 0.6f)
-        assertEquals(2, b.track)
-        assertEquals(4, a.track)
+        assertEquals(7, b.track)
+        assertEquals(9, a.track)
         assertEquals(setOf(2L, 9L), st.multi)
         // a tap on empty space deselects
         tl.performTouchInput { down(pt(18f, 60f)); up() }
@@ -257,7 +257,7 @@ class EditToolsTest {
         val st = EditorState().apply { playhead = 30f; centerPlayhead = true }
         timeline(st)
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = pt(10.5f, 70f)
+            val from = pt(10.5f, 260f)
             down(from)
             for (i in 1..8) moveTo(Offset(from.x - 16f * density * 3f * i / 8, from.y))
             up()
@@ -273,26 +273,26 @@ class EditToolsTest {
         val n0 = st.clips.size
         val tl = rule.onNodeWithTag("timeline")
         tl.performTouchInput {
-            val from = pt(11f, 106f) // B-roll on V1
+            val from = pt(11f, 306f) // B-roll on V1
             down(from)
-            for (i in 1..12) moveTo(Offset(from.x + 2f, from.y + (240f - 106f) * density * i / 12))
+            for (i in 1..12) moveTo(Offset(from.x + 2f, from.y + (442f - 306f) * density * i / 12))
         }
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("$dir/62_rakblad_linje.png")
         tl.performTouchInput { up() }
         rule.waitForIdle()
         assertEquals(n0 + 3, st.clips.size) // V1, A2, A3 (A1 has a gap at 11 s)
-        assertEquals("V2/V3 above untouched", 1, st.clips.count { it.track == 1 })
-        assertTrue(st.clips.any { it.track == 5 && it.start == 11f })
+        assertEquals("V2/V3 above untouched", 1, st.clips.count { it.track == 6 })
+        assertTrue(st.clips.any { it.track == 10 && it.start == 11f })
         // an ordinary tap with the razor still splits only the clip
         tl.performTouchInput { down(pt(17f, 106f)); up() }
         rule.waitForIdle()
         assertEquals(n0 + 4, st.clips.size)
         // upward works too: from A3 to V2 at 20.5 s (music, interview L on A1, A003 on V1)
         tl.performTouchInput {
-            val from = pt(20.5f, 240f)
+            val from = pt(20.5f, 442f)
             down(from)
-            for (i in 1..12) moveTo(Offset(from.x, from.y - (240f - 60f) * density * i / 12))
+            for (i in 1..12) moveTo(Offset(from.x, from.y - (442f - 260f) * density * i / 12))
             up()
         }
         rule.waitForIdle()
@@ -472,11 +472,11 @@ class EditToolsTest {
     @Test fun lockedTrackBlocksEditsAndHiddenTrackIsNotPlayed() {
         val notes = mutableListOf<String>()
         val st = EditorState().apply { onNotice = { notes += it } }
-        st.setTrackFlag(2, "locked", true) // V1
+        st.setTrackFlag(7, "locked", true) // V1
         val before = st.clips
         st.split(2L, 10f)
         st.requestRemove(2L, false)
-        st.moveClip(st.clips.first { it.id == 2L }, 20f, 2, false)
+        st.moveClip(st.clips.first { it.id == 2L }, 20f, 7, false)
         assertEquals(0, st.razorAcross(11f, 2..2))
         assertEquals(before, st.clips)
         assertTrue(st.removing.isEmpty())
@@ -497,7 +497,7 @@ class EditToolsTest {
         rule.onRoot().captureRoboImage("$dir/65_sparmeny.png")
         rule.onNodeWithTag("trackFlag:V1:locked").performClick()
         rule.waitForIdle()
-        assertTrue(st.trackStates[2].locked)
+        assertTrue(st.trackStates[7].locked)
         // V1 locked: dragging B-roll moves nothing
         rule.onNodeWithTag("timeline").performTouchInput {
             val from = pt(10f, 106f)
@@ -512,7 +512,7 @@ class EditToolsTest {
         rule.waitForIdle()
         rule.onNodeWithTag("trackFlag:A2:muted").performClick()
         rule.waitForIdle()
-        assertTrue(st.trackStates[4].muted)
+        assertTrue(st.trackStates[9].muted)
         rule.onRoot().captureRoboImage("$dir/66_spar_last_tyst.png")
     }
 
@@ -522,7 +522,7 @@ class EditToolsTest {
         val tl = rule.onNodeWithTag("timeline")
         // roll: the edit point at 8 s on V1 is dragged 1.5 s to the right
         tl.performTouchInput {
-            val from = pt(8f, 106f)
+            val from = pt(8f, 306f)
             down(from)
             for (i in 1..10) moveTo(Offset(from.x + 16f * density * 1.5f * i / 10, from.y))
             up()
@@ -534,7 +534,7 @@ class EditToolsTest {
         // slip: drag A003 (13–22 s) left 2 s = later frames (source +2 s), position stays
         val c = st.clips.first { it.id == 4L }
         tl.performTouchInput {
-            val from = pt(20.5f, 106f) // A003 13–22
+            val from = pt(20.5f, 306f) // A003 13–22
             down(from)
             for (i in 1..10) moveTo(Offset(from.x - 16f * density * 2f * i / 10, from.y))
             up()
