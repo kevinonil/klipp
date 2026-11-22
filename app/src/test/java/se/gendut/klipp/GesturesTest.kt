@@ -32,12 +32,12 @@ class GesturesTest {
     val rule = createComposeRule()
     private val dir = "build/shots"
 
-    /** Second and height in dp below the ruler (V3 0, V2 40, V1 80, A1 132 …). pps = 16 dp/s. */
+    /** Second and height in dp below the ruler (V8 0, V7 40, V6 80, V5 120, V4 160, V3 200, V2 240, V1 280, A1 332 …). pps = 16 dp/s. */
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
         return Offset(sec * 16f * d, (28f + yDp) * d)
     }
-    private val v1 = 80f + 26f
+    private val v1 = 7 * 40f + 26f
 
     private fun timeline(st: EditorState, tool: Tool = Tool.SELECT) {
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, tool, Modifier.fillMaxSize()) } } }
@@ -55,10 +55,10 @@ class GesturesTest {
             up()
         }
         rule.waitForIdle()
-        val parts = st.clips.filter { it.track == 2 && it.name == "A003_intervju" && it.start >= 13f }.sortedBy { it.start }
+        val parts = st.clips.filter { it.track == 7 && it.name == "A003_intervju" && it.start >= 13f }.sortedBy { it.start }
         assertEquals(2, parts.size)
         assertEquals(18f, parts[1].start, 0.05f)
-        assertEquals("only that clip is cut", 5, st.clips.count { it.track == 2 })
+        assertEquals("only that clip is cut", 5, st.clips.count { it.track == 7 })
     }
 
     @Test fun slowVerticalDragStillMovesBetweenTracks() {
@@ -73,7 +73,7 @@ class GesturesTest {
             up()
         }
         rule.waitForIdle()
-        assertEquals("moved to V2, not cut", 1, st.clips.first { it.id == 2L }.track)
+        assertEquals("moved to V2, not cut", 6, st.clips.first { it.id == 2L }.track)
         assertEquals(1, st.clips.count { it.name == "B-roll_hamn" })
     }
 
@@ -137,8 +137,8 @@ class GesturesTest {
 
     @Test fun emptyTracksBecomeSlimLanes() {
         val clips = listOf(
-            Clip(1, "A", ClipKind.VIDEO, 2, 0f, 5f, 0f, 10f, 0),
-            Clip(2, "A", ClipKind.AUDIO, 3, 0f, 5f, 0f, 10f, 0),
+            Clip(1, "A", ClipKind.VIDEO, 7, 0f, 5f, 0f, 10f, 0),
+            Clip(2, "A", ClipKind.AUDIO, 8, 0f, 5f, 0f, 10f, 0),
         )
         val st = EditorState(clips)
         timeline(st)
