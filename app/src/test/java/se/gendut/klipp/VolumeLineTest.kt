@@ -44,8 +44,8 @@ class VolumeLineTest {
         assertEquals(-20f, lv.at(9f), 0f)
     }
 
-    /** A1 (0–8 s "intervju L"): the track starts 132 dp below the ruler, 44 × 1.6 dp tall with the lines on. */
-    private val clipTop = 132f + 3f
+    /** A1 (0–8 s "intervju L"): the track starts below the eight video tracks, 44 × 1.6 dp tall with the lines on. */
+    private val clipTop = (7 * 40f + 52f) + 3f
     private val clipH = 44f * VOL_TRACK_SCALE - 6f
     private fun yOfDb(db: Float): Float { val bt = clipTop + 17f; val bb = clipTop + clipH - 3f; return bb - ClipLevel.pos(db) * (bb - bt) }
     private fun pt(sec: Float, yDp: Float): Offset { val d = rule.density.density; return Offset(sec * 16f * d, (28f + yDp) * d) }
@@ -55,7 +55,7 @@ class VolumeLineTest {
         val props = VolProps()
         st.props = props
         st.volLines = true
-        val id = st.clips.first { it.track == 3 && it.start == 0f }.id
+        val id = st.clips.first { it.track == VIDEO_TRACK_COUNT && it.start == 0f }.id
         levels(id)?.let { st.clipLevels = mapOf(id to it) }
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, Tool.SELECT, Modifier.fillMaxSize()) } } }
         rule.waitForIdle()
