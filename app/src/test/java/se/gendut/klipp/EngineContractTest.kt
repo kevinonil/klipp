@@ -126,7 +126,7 @@ class EngineContractTest {
         val s = snap()
         val q = s.sequence!!
         val clips = q.video[0].clips.map {
-            Clip(it.id, it.name, ClipKind.VIDEO, 2, it.start.toFloat(), it.duration.toFloat(), it.sourceIn.toFloat(), 10f, 0)
+            Clip(it.id, it.name, ClipKind.VIDEO, VIDEO_TRACK_COUNT - 1, it.start.toFloat(), it.duration.toFloat(), it.sourceIn.toFloat(), 10f, 0)
         }
         state.applyEngine(clips, s.canUndo, s.canRedo)
         assertEquals(3, state.clips.size)
