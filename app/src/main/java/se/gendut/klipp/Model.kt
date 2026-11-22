@@ -30,14 +30,18 @@ enum class TrackKind { VIDEO, AUDIO }
 
 data class TrackDef(val name: String, val kind: TrackKind, val heightDp: Int)
 
-val TRACKS = listOf(
-    TrackDef("V3", TrackKind.VIDEO, 40),
-    TrackDef("V2", TrackKind.VIDEO, 40),
-    TrackDef("V1", TrackKind.VIDEO, 52),
-    TrackDef("A1", TrackKind.AUDIO, 44),
-    TrackDef("A2", TrackKind.AUDIO, 44),
-    TrackDef("A3", TrackKind.AUDIO, 44),
-)
+const val VIDEO_TRACK_COUNT = 8
+const val AUDIO_TRACK_COUNT = 3
+
+/** UI order is top-to-bottom: V8 … V1, then A1 … A3. */
+val TRACKS = buildList {
+    for (number in VIDEO_TRACK_COUNT downTo 1) {
+        add(TrackDef("V$number", TrackKind.VIDEO, if (number == 1) 52 else 40))
+    }
+    for (number in 1..AUDIO_TRACK_COUNT) {
+        add(TrackDef("A$number", TrackKind.AUDIO, 44))
+    }
+}
 
 enum class ClipKind(val bg: Color, val fg: Color, val track: TrackKind) {
     VIDEO(Color(0xFF4F6B82), Color(0xFFFFFFFF), TrackKind.VIDEO),
@@ -382,9 +386,9 @@ class EditorState(initial: List<Clip> = initialClips()) {
         private set
     var backend: EditBackend? = null
     var subtitle by mutableStateOf(Str.t(R.string.model_subtitle_prototype))
-    /** Target tracks for the source's video/audio (UI index: V1 = 2, A1 = 3). */
-    var targetVideo by mutableIntStateOf(2)
-    var targetAudio by mutableIntStateOf(3)
+    /** Target tracks for the source's video/audio (UI order: V8 … V1, then A1 …). */
+    var targetVideo by mutableIntStateOf(VIDEO_TRACK_COUNT - 1)
+    var targetAudio by mutableIntStateOf(VIDEO_TRACK_COUNT)
     var onTargetTrack: ((Int) -> Unit)? by mutableStateOf(null)
     var onAddMarker: ((Float) -> Unit)? by mutableStateOf(null)
     /** Remove the marker at this time, and all of them (set when the engine is attached). */
@@ -477,7 +481,7 @@ class EditorState(initial: List<Clip> = initialClips()) {
     var playhead by mutableFloatStateOf(14f)
     var playing by mutableStateOf(false)
     var selected by mutableStateOf<Long?>(null)
-    /** Track states, V3 V2 V1 A1 A2 A3 (indexed like TRACKS). */
+    /** Track states, V8 … V1, A1 … A3 (indexed like TRACKS). */
     var trackStates by mutableStateOf(List(TRACKS.size) { TrackState() })
     /** Short message to the user (set by the app to a toast). */
     var onNotice: ((String) -> Unit)? = null
@@ -926,10 +930,13 @@ class EditorState(initial: List<Clip> = initialClips()) {
         commit(placeWithRipple(clips.filter { it.id != orig.id }, orig.copy(start = start, track = track)))
     }
 
-    /** How far out from the middle a track is: V1/A1 = 0, V2/A2 = 1, V3/A3 = 2. */
-    private fun levelOf(track: Int): Int = if (TRACKS[track].kind == TrackKind.VIDEO) 2 - track else track - 3
-    /** The track of the same kind as [like] at [level] (clamped to the tracks there are). */
-    private fun trackAtLevel(like: Int, level: Int): Int = level.coerceIn(0, 2).let { if (TRACKS[like].kind == TrackKind.VIDEO) 2 - it else 3 + it }
+    /** Distance from the bottom/source track: V1/A1 = 0, V2/A2 = 1, etc. */
+    private fun levelOf(track: Int): Int =
+        if (TRACKS[track].kind == TrackKind.VIDEO) VIDEO_TRACK_COUNT - 1 - track else track - VIDEO_TRACK_COUNT
+    /** The track of the same kind as [like] at [level] (clamped to that kind's available tracks). */
+    private fun trackAtLevel(like: Int, level: Int): Int =
+        level.coerceIn(0, if (TRACKS[like].kind == TrackKind.VIDEO) VIDEO_TRACK_COUNT - 1 else AUDIO_TRACK_COUNT - 1)
+            .let { if (TRACKS[like].kind == TrackKind.VIDEO) VIDEO_TRACK_COUNT - 1 - it else VIDEO_TRACK_COUNT + it }
     /** Where linked [partner] goes when [orig] moves to [track]: as many tracks out from the middle. */
     fun partnerTrack(orig: Clip, track: Int, partner: Clip): Int = trackAtLevel(partner.track, levelOf(partner.track) + levelOf(track) - levelOf(orig.track))
 
@@ -947,7 +954,7 @@ class EditorState(initial: List<Clip> = initialClips()) {
         // new clips: a split pops in sideways, everything else drops in from above
         for (c in next) if (c.id !in old) {
             val wasSplit = clips.any { it.track == c.track && it.start < c.start && it.end >= c.start - 0.001f && it.kind == c.kind && it.name == c.name }
-            popFrom[c.id] = if (wasSplit) Pair(c.start + 0.6f, c.track.toFloat()) else Pair(c.start, if (c.track <= 2) -3f else 8f)
+            popFrom[c.id] = if (wasSplit) Pair(c.start + 0.6f, c.track.toFloat()) else Pair(c.start, if (c.track < VIDEO_TRACK_COUNT) -3f else 8f)
         }
         clips = next
         engineDriven = true
