@@ -56,7 +56,7 @@ class KlippUiTest {
         return Offset(sec * 16f * d, (28f + compactTrackY(trackCenterDp)) * d)
     }
 
-    private val v1Center = 132f
+    private val v1Center = 306f
 
     @Test
     fun editorRendersAndClipSnapsAndRipples() {
@@ -345,7 +345,7 @@ class KlippUiTest {
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("$dir/19_rulla_efter.png")
         // after scrolling: a tap lower down hits the A3 music (which was off screen before)
-        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.56f)) }
+        rule.onNodeWithTag("timeline").performTouchInput { click(Offset(width * 0.5f, height * 0.2f)) }
         rule.waitForIdle()
         assertEquals("the A3 clip can be selected after scrolling", 11L, state.selected)
     }
