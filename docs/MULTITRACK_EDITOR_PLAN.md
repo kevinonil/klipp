@@ -11,6 +11,22 @@ The editor must support two composition layouts:
 
 Each clip keeps its own trim points, timeline position, crop/transform, visibility, and selection state.
 
+## Implementation status
+
+The feature/multitrack-editor branch now contains the first end-to-end eight-track pass:
+
+- The timeline model exposes V8–V1 plus the existing A1–A3 lanes, with target and linked-track index mapping updated.
+- Existing sequences are expanded in the FilmCraft engine to eight video tracks once per sequence; this is not repeated on every refresh.
+- Timeline placement, track flags, clip conversion, transition mapping, title placement, preview planning, live still preview, render-cache transition windows, and the playback rebuild key now account for all eight video tracks.
+- Tests cover the eight-track model, V1/A1 source targets, linked-track bounds, and title placement up to V8.
+
+Still outstanding before calling the feature complete:
+
+- A dedicated stacked/split-screen layout control and preset workflow.
+- Full integration coverage for eight simultaneous clips through preview, save/reopen, and MP4 export.
+- Device-level decoder/performance validation and safeguards for phones that cannot decode eight streams at once.
+- A successful Android CI build and unit-test run. No workflow run/check result is currently available for the branch, so build success is not yet verified.
+
 ## User-facing requirements
 
 - Import and place up to eight video clips on independent video tracks.
