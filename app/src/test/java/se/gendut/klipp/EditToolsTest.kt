@@ -134,9 +134,9 @@ class EditToolsTest {
         st.lassoSelect(setOf(1L, 2L))
         st.moveMarked(-5f, insert = false)
         assertEquals(n, log.size)
-        assertEquals(3, st.razorAcross(11f, 2..5))
+        assertEquals(3, st.razorAcross(11f, 7..10))
         assertEquals("razor 11.0 [7, 9, 10]", log.last())
-        assertEquals("nothing to cut", 0, st.razorAcross(8f, 2..2))
+        assertEquals("nothing to cut", 0, st.razorAcross(8f, 7..7))
         // delete several: one call when all animations are done
         st.lassoSelect(setOf(2L, 9L))
         st.removeMarked(true)
@@ -173,7 +173,7 @@ class EditToolsTest {
         timeline(st)
         val tl = rule.onNodeWithTag("timeline")
         rule.mainClock.autoAdvance = false
-        tl.performTouchInput { down(pt(10.5f, 70f)) } // empty space on V2 (the adjustment ends at 9 s)
+        tl.performTouchInput { down(pt(10.5f, 260f)) } // empty space on V2 (the adjustment ends at 9 s)
         rule.mainClock.advanceTimeBy(800)
         // selection box: diagonally from V2 (10.5 s) down to A2 (12.7 s)
         tl.performTouchInput {
@@ -285,7 +285,7 @@ class EditToolsTest {
         assertEquals("V2/V3 above untouched", 1, st.clips.count { it.track == 6 })
         assertTrue(st.clips.any { it.track == 10 && it.start == 11f })
         // an ordinary tap with the razor still splits only the clip
-        tl.performTouchInput { down(pt(17f, 106f)); up() }
+        tl.performTouchInput { down(pt(17f, 306f)); up() }
         rule.waitForIdle()
         assertEquals(n0 + 4, st.clips.size)
         // upward works too: from A3 to V2 at 20.5 s (music, interview L on A1, A003 on V1)
@@ -500,7 +500,7 @@ class EditToolsTest {
         assertTrue(st.trackStates[7].locked)
         // V1 locked: dragging B-roll moves nothing
         rule.onNodeWithTag("timeline").performTouchInput {
-            val from = pt(10f, 106f)
+            val from = pt(10f, 306f)
             down(from)
             for (i in 1..10) moveTo(Offset(from.x + 16f * density * 3f * i / 10, from.y))
             up()
@@ -508,7 +508,7 @@ class EditToolsTest {
         rule.waitForIdle()
         assertEquals(8f, st.clips.first { it.id == 2L }.start, 1e-4f)
         // audio track: mute via the menu
-        rule.onNodeWithTag("trackHeader:A2").performTouchInput { longClick() }
+        rule.onNodeWithTag("trackHeader:A2").performScrollTo().performTouchInput { longClick() }
         rule.waitForIdle()
         rule.onNodeWithTag("trackFlag:A2:muted").performClick()
         rule.waitForIdle()
