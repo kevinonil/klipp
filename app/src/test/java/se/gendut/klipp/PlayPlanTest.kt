@@ -1,5 +1,6 @@
 package se.gendut.klipp
 
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -24,6 +25,33 @@ class PlayPlanTest {
         val o = JSONObject(javaClass.classLoader!!.getResource("snapshot_fx.json")!!.readText())
         o.getJSONObject("sequence").getJSONArray("video").getJSONObject(0).getJSONArray("transitions").getJSONObject(0).put("effect", effect)
         return Snapshot.parse(o)
+    }
+
+    @Test fun exportLayerPlanIncludesAllEightVideoTracksInTopToBottomOrder() {
+        val o = JSONObject(javaClass.classLoader!!.getResource("snapshot.json")!!.readText())
+        val video = o.getJSONObject("sequence").getJSONArray("video")
+        val sourceClip = video.getJSONObject(0).getJSONArray("clips").getJSONObject(0)
+        val template = video.getJSONObject(0)
+        // The fixture has V1–V3. Add V4–V8 with real clips, as an eight-layer edit would have.
+        for (number in 4..8) {
+            val clip = JSONObject(sourceClip.toString())
+                .put("id", 100L + number)
+                .put("start", 0.0)
+                .put("duration", 2.0)
+            val track = JSONObject(template.toString())
+                .put("id", 200L + number)
+                .put("name", "Video $number")
+                .put("clips", JSONArray().put(clip))
+                .put("transitions", JSONArray())
+            video.put(track)
+        }
+        val snapshot = Snapshot.parse(o)
+        val plan = LayerPlanner.plan(snapshot) { 30.0 }!!
+        assertEquals(
+            (8 downTo 1).map { "Video $it" },
+            plan.layers.map { it.name },
+        )
+        assertTrue(plan.layers.all { it.segs.isNotEmpty() })
     }
 
     @Test fun withoutTransitionsTheTimelineIsTheClipsCutTogether() {
