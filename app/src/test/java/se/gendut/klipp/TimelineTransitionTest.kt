@@ -34,9 +34,18 @@ class TimelineTransitionTest {
     private val dir = "build/shots"
 
     /** A point in the timeline: second and height in dp below the ruler (V1 starts 280 dp down). pps = 16 dp/s. */
+    /** Convert the original full-height track coordinates to the current compact empty-lane layout. */
+    private fun compactTrackY(yDp: Float): Float {
+        val oldBounds = floatArrayOf(0f, 40f, 80f, 120f, 160f, 200f, 240f, 280f, 332f, 376f, 420f, 464f)
+        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 120f, 160f, 212f, 256f, 300f, 344f)
+        val row = (0 until oldBounds.lastIndex).firstOrNull { yDp < oldBounds[it + 1] } ?: oldBounds.lastIndex - 1
+        val fraction = ((yDp - oldBounds[row]) / (oldBounds[row + 1] - oldBounds[row])).coerceIn(0f, 1f)
+        return newBounds[row] + fraction * (newBounds[row + 1] - newBounds[row])
+    }
+
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
-        return Offset(sec * 16f * d, (28f + yDp) * d)
+        return Offset(sec * 16f * d, (28f + compactTrackY(yDp)) * d)
     }
 
     private fun setUp(fake: FakeProps, init: EditorState.() -> Unit = {}): EditorState {
