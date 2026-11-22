@@ -175,6 +175,9 @@ class ProjectsTest {
         val fake = FakeProjects()
         rule.setContent { KlippTheme { ProjectsScreen(fake) {} } }
         rule.waitForIdle()
+        // Project/backup data is loaded on Dispatchers.IO; wait for the card rather than assuming
+        // Compose idleness means the asynchronous repository read has completed.
+        rule.waitUntil(10_000) { rule.onAllNodesWithTag("heroBackup").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("heroBackup").assertTextContains("Aldrig säkerhetskopierad")
         rule.onNodeWithTag("projectMenu:p1").performClick()
         rule.waitForIdle()
