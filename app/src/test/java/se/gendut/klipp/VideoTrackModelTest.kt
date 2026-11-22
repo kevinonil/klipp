@@ -24,6 +24,6 @@ class VideoTrackModelTest {
         val state = EditorState(emptyList())
         val video = Clip(1, "video", ClipKind.VIDEO, VIDEO_TRACK_COUNT - 1, 0f, 2f, 0f, 2f, 0, link = 7)
         val audio = Clip(2, "audio", ClipKind.AUDIO, VIDEO_TRACK_COUNT, 0f, 2f, 0f, 2f, 0, link = 7)
-        assertEquals(VIDEO_TRACK_COUNT, state.partnerTrack(video, 0, audio))
+        assertEquals(VIDEO_TRACK_COUNT + AUDIO_TRACK_COUNT - 1, state.partnerTrack(video, 0, audio))
     }
 }
