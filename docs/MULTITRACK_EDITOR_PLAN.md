@@ -66,12 +66,12 @@ Still outstanding before calling the feature complete:
 - Add instrumentation tests for preview and MP4 export with multiple simultaneous videos.
 - Run the Android build and test suite before merging.
 
-## Architectural constraints discovered
+## Architectural notes
 
-- The current timeline and preview code contain fixed three-video-track assumptions.
-- UpperLayers already implements independent preview players for upper video layers.
-- engine/Layers.kt builds a multi-layer export plan and currently plans only the existing video-track collection.
-- This must be expanded end-to-end; changing only the visible timeline would create clips that appear editable but do not preview or export correctly.
+- The FilmCraft engine already supports adding tracks dynamically; the Android layer now expands the active sequence to eight video tracks.
+- UpperLayers and the compositor use a generic layer plan, so the plan now feeds V8–V1 into preview and export.
+- Several non-obvious fixed-three assumptions also affected color grading, live still preview, playback cache keys, transition pre-render windows, and title placement; those paths have been updated in this branch.
+- A visible timeline alone is not sufficient: every new track must remain represented in project state, preview planning, and export planning.
 
 ## Acceptance criteria
 
