@@ -514,8 +514,17 @@ fun Timeline(state: EditorState, tool: Tool, modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TrackMenu(menu, { menu = false }, t, ts) { flag, on -> haptics.tick(); state.setTrackFlag(i, flag, on) }
-                    // an empty track as a slim lane: just its name (tap = target it, which opens it)
-                    if (slim) { Text(t.name, color = K.Outline, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 14.dp)); return@Row }
+                    // Empty tracks stay compact, but keep their target and hide/mute controls reachable.
+                    if (slim) {
+                        Text(t.name, color = K.Outline, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 14.dp))
+                        Spacer(Modifier.weight(1f))
+                        if (t.kind == TrackKind.VIDEO) HeaderToggle(Ic.Eye, stringResource(R.string.timeline_hide_track), false, "trackToggle:${t.name}") {
+                            haptics.press(); state.setTrackFlag(i, "enabled", !ts.enabled)
+                        } else HeaderToggle(Ic.Speaker, stringResource(R.string.timeline_mute_track), false, "trackToggle:${t.name}") {
+                            haptics.press(); state.setTrackFlag(i, "muted", !ts.muted)
+                        }
+                        return@Row
+                    }
                     Box(
                         Modifier.size(6.dp, lampH).clip(RoundedCornerShape(3.dp))
                             .background(lamp)
