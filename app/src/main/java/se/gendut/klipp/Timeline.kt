@@ -518,9 +518,9 @@ fun Timeline(state: EditorState, tool: Tool, modifier: Modifier = Modifier) {
                     if (slim) {
                         Text(t.name, color = K.Outline, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 14.dp))
                         Spacer(Modifier.weight(1f))
-                        if (t.kind == TrackKind.VIDEO) HeaderToggle(Ic.Eye, stringResource(R.string.timeline_hide_track), false, "trackToggle:${t.name}") {
+                        if (t.kind == TrackKind.VIDEO) HeaderToggle(if (ts.enabled) Ic.Eye else Ic.EyeOff, if (ts.enabled) stringResource(R.string.timeline_hide_track) else stringResource(R.string.timeline_show_track), !ts.enabled, "trackToggle:${t.name}") {
                             haptics.press(); state.setTrackFlag(i, "enabled", !ts.enabled)
-                        } else HeaderToggle(Ic.Speaker, stringResource(R.string.timeline_mute_track), false, "trackToggle:${t.name}") {
+                        } else HeaderToggle(if (ts.muted) Ic.SpeakerOff else Ic.Speaker, if (ts.muted) stringResource(R.string.timeline_unmute) else stringResource(R.string.timeline_mute_track), ts.muted, "trackToggle:${t.name}") {
                             haptics.press(); state.setTrackFlag(i, "muted", !ts.muted)
                         }
                         return@Row
