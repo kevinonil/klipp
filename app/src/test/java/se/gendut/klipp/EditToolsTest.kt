@@ -158,7 +158,7 @@ class EditToolsTest {
         st.undo()
         assertEquals(before, st.clips)
         // the razor: three cuts, one undo step
-        assertEquals(3, st.razorAcross(11f, 2..5))
+        assertEquals(3, st.razorAcross(11f, 7..10))
         assertEquals(before.size + 3, st.clips.size)
         val right = st.clips.first { it.track == 7 && it.start == 11f }
         assertEquals(before.first { it.id == 2L }.srcIn + 3f, right.srcIn, 1e-4f)
@@ -477,7 +477,7 @@ class EditToolsTest {
         st.split(2L, 10f)
         st.requestRemove(2L, false)
         st.moveClip(st.clips.first { it.id == 2L }, 20f, 7, false)
-        assertEquals(0, st.razorAcross(11f, 2..2))
+        assertEquals(0, st.razorAcross(11f, 7..7))
         assertEquals(before, st.clips)
         assertTrue(st.removing.isEmpty())
         assertTrue(notes.all { it == "Spåret är låst" } && notes.size >= 3)
