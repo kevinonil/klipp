@@ -37,7 +37,7 @@ class GesturesTest {
         val d = rule.density.density
         return Offset(sec * 16f * d, (28f + yDp) * d)
     }
-    private val v1 = 7 * 40f + 26f
+    private val v1 = 186f
 
     private fun timeline(st: EditorState, tool: Tool = Tool.SELECT) {
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, tool, Modifier.fillMaxSize()) } } }
