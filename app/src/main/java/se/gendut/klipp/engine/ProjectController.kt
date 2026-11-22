@@ -25,6 +25,8 @@ import se.gendut.klipp.EditorState
 import se.gendut.klipp.R
 import se.gendut.klipp.Str
 import se.gendut.klipp.TRACKS
+import se.gendut.klipp.VIDEO_TRACK_COUNT
+import se.gendut.klipp.AUDIO_TRACK_COUNT
 import kotlin.math.abs
 
 /**
@@ -366,8 +368,10 @@ class ProjectController(
 
     // ------------------------------------------------------------------ EditBackend
 
-    private fun engineTrack(uiTrack: Int): String = when (uiTrack) {
-        0 -> "V3"; 1 -> "V2"; 2 -> "V1"; 3 -> "A1"; 4 -> "A2"; else -> "A3"
+    private fun engineTrack(uiTrack: Int): String {
+        val index = uiTrack.coerceIn(0, TRACKS.lastIndex)
+        return if (index < VIDEO_TRACK_COUNT) "V${VIDEO_TRACK_COUNT - index}"
+        else "A${index - VIDEO_TRACK_COUNT + 1}"
     }
 
     /** An engine command under the lock; the timeline is reread before the next edit gets the lock (never stale state). */
@@ -677,8 +681,17 @@ class ProjectController(
      * through) does nothing – no playback rebuild, no save. [force]: do it anyway (e.g. new file lengths).
      */
     suspend fun refresh(force: Boolean = false) {
-        val snap = try {
-            engine.snapshot()
+        var snap = try {
+            var current = engine.snapshot()
+            // Expand existing projects in the engine itself; changing only the UI would leave
+            // preview and export unaware of the additional video tracks.
+            val haveVideo = current.sequence?.video?.size ?: 0
+            if (haveVideo in 1 until VIDEO_TRACK_COUNT) {
+                val added = engine.tryExec("sequence.addTracks", JSONObject().put("video", VIDEO_TRACK_COUNT - haveVideo))
+                if (added.isSuccess) current = engine.snapshot()
+                else onMessage("Could not add video tracks: ${added.exceptionOrNull()?.message.orEmpty()}")
+            }
+            current
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -701,16 +714,17 @@ class ProjectController(
         state.linkedSelection = snap.linkedSelection
         snap.sequence?.let { q ->
             state.markers = q.markers.map { it.time.toFloat() }
-            q.video.indexOfFirst { it.id == q.videoTarget }.takeIf { it in 0..2 }?.let { state.targetVideo = 2 - it }
-            q.audio.indexOfFirst { it.id == q.audioTarget }.takeIf { it in 0..2 }?.let { state.targetAudio = 3 + it }
+            q.video.indexOfFirst { it.id == q.videoTarget }.takeIf { it in 0 until VIDEO_TRACK_COUNT }?.let { state.targetVideo = VIDEO_TRACK_COUNT - 1 - it }
+            q.audio.indexOfFirst { it.id == q.audioTarget }.takeIf { it in 0 until AUDIO_TRACK_COUNT }?.let { state.targetAudio = VIDEO_TRACK_COUNT + it }
             fun uiOf(t: TrackSnap, track: Int) = t.transitions.map { x ->
                 val anchor = when { x.from == null -> -1; x.to == null -> 1; else -> 0 }
                 val cut = t.clips.firstOrNull { it.id == x.to }?.start ?: ((x.start + x.end) / 2)
                 se.gendut.klipp.UiTransition(x.id, track, x.start.toFloat(), x.end.toFloat(), anchor, cut.toFloat(), x.effect, x.reverse, x.from, x.to)
             }
-            // video: V1 = 2, V2 = 1, V3 = 0; audio: A1 = 3 …
+            // Engine order is V1-up; UI order is V8-down.
             val selectedWas = state.transitions.firstOrNull { it.id == state.selectedTransition }
-            state.transitions = q.video.take(3).flatMapIndexed { k, t -> uiOf(t, 2 - k) } + q.audio.take(3).flatMapIndexed { k, t -> uiOf(t, 3 + k) }
+            state.transitions = q.video.take(VIDEO_TRACK_COUNT).flatMapIndexed { k, t -> uiOf(t, VIDEO_TRACK_COUNT - 1 - k) } +
+                q.audio.take(AUDIO_TRACK_COUNT).flatMapIndexed { k, t -> uiOf(t, VIDEO_TRACK_COUNT + k) }
             // a selected transition that is gone: if another one is in its place now (a change of type or direction removes
             // it and adds a new one), that one is selected – its card stays open
             if (state.selectedTransition != null && state.transitions.none { it.id == state.selectedTransition }) {
@@ -723,10 +737,10 @@ class ProjectController(
             state.captionsOn = q.captionTracks.isEmpty() || q.captionTracks.any { it.enabled }
             if (state.selectedCaption != null && state.captions.none { it.id == state.selectedCaption }) { state.selectedCaption = null; state.editingCaption = false }
             state.trackStates = List(TRACKS.size) { i ->
-                val t = if (i <= 2) q.video.getOrNull(2 - i) else q.audio.getOrNull(i - 3)
+                val t = if (i < VIDEO_TRACK_COUNT) q.video.getOrNull(VIDEO_TRACK_COUNT - 1 - i) else q.audio.getOrNull(i - VIDEO_TRACK_COUNT)
                 if (t == null) se.gendut.klipp.TrackState() else se.gendut.klipp.TrackState(t.locked, t.enabled, t.muted, t.solo, t.syncLock)
             }
-            state.trackVolKf = q.audio.take(3).map { t -> if (t.autoMode == "Off") emptyList() else t.volKf.map { it.first.toFloat() to it.second.toFloat() } }
+            state.trackVolKf = q.audio.take(AUDIO_TRACK_COUNT).map { t -> if (t.autoMode == "Off") emptyList() else t.volKf.map { it.first.toFloat() to it.second.toFloat() } }
             state.clipLevels = q.audio.flatMap { it.clips }.associate { c ->
                 c.id to se.gendut.klipp.ClipLevel(c.levelDb.toFloat(), c.kf[KfKeys.LEVEL]?.map { se.gendut.klipp.UiKf(it.t.toFloat(), it.mt, it.interp, it.v, it.inInf, it.outInf) }.orEmpty())
             }
@@ -752,7 +766,7 @@ class ProjectController(
         state.selectedCaption = null; state.editingCaption = false
         state.trackStates = List(TRACKS.size) { se.gendut.klipp.TrackState() }
         state.trackVolKf = emptyList(); state.clipLevels = emptyMap()
-        state.targetVideo = 2; state.targetAudio = 3
+        state.targetVideo = VIDEO_TRACK_COUNT - 1; state.targetAudio = VIDEO_TRACK_COUNT
     }
 
     /**
@@ -1577,7 +1591,7 @@ class ProjectController(
 
     /** Places a sound effect ([seconds] long) at [atSec] on the first free audio track (see SoundFx.freeTrack). */
     fun placeSound(file: File, atSec: Double, seconds: Double, name: String) {
-        val busy = snapshot.sequence?.audio.orEmpty().take(3).map { t -> t.clips.map { it.start to it.end } }
+        val busy = snapshot.sequence?.audio.orEmpty().take(AUDIO_TRACK_COUNT).map { t -> t.clips.map { it.start to it.end } }
         placeAudio(file, atSec, SoundFx.freeTrack(busy, atSec, seconds), name, Str.t(R.string.projectcontroller_undo_sound),
             { Str.t(R.string.projectcontroller_sound_placed, it + 1) }, { Str.t(R.string.projectcontroller_sound_failed, it) })
     }
@@ -1976,7 +1990,7 @@ class ProjectController(
             fun f(sec: Double) = Math.round(sec * fps)
             val place = titlePlace(
                 q.video.map { t -> t.clips.map { FrameSpan(f(it.start), f(it.start + it.duration)) } },
-                q.video.mapIndexed { i, t -> t.locked || (i < SHOWN_VIDEO_TRACKS && state.locked(SHOWN_VIDEO_TRACKS - 1 - i)) },
+                q.video.mapIndexed { i, t -> t.locked || (i < VIDEO_TRACK_COUNT && state.locked(VIDEO_TRACK_COUNT - 1 - i)) },
                 f(at.toDouble()), f(seconds),
             )
             if (!place.ok) {
@@ -2254,11 +2268,11 @@ class ProjectController(
         val q = s.sequence ?: return emptyList()
         val out = ArrayList<Clip>()
         val media = s.media.associateBy { it.id }
-        q.video.take(3).forEachIndexed { k, t ->
-            for (c in t.clips) out += c.toUi(2 - k, if (c.isTitle) ClipKind.TITLE else ClipKind.VIDEO, media[c.item])
+        q.video.take(VIDEO_TRACK_COUNT).forEachIndexed { k, t ->
+            for (c in t.clips) out += c.toUi(VIDEO_TRACK_COUNT - 1 - k, if (c.isTitle) ClipKind.TITLE else ClipKind.VIDEO, media[c.item])
         }
-        q.audio.take(3).forEachIndexed { k, t ->
-            for (c in t.clips) out += c.toUi(3 + k, ClipKind.AUDIO, media[c.item])
+        q.audio.take(AUDIO_TRACK_COUNT).forEachIndexed { k, t ->
+            for (c in t.clips) out += c.toUi(VIDEO_TRACK_COUNT + k, ClipKind.AUDIO, media[c.item])
         }
         return out
     }
