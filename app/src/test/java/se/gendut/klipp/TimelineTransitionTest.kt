@@ -114,7 +114,7 @@ class TimelineTransitionTest {
     @Test
     fun draggingATransitionEdgeResizesItAndTapSelectsIt() {
         val fake = FakeProps()
-        val st = setUp(fake) { transitions = listOf(UiTransition(7, 2, 12f, 14f, 0, 13f)) }
+        val st = setUp(fake) { transitions = listOf(UiTransition(7, 7, 12f, 14f, 0, 13f)) }
         rule.onNodeWithTag("timeline").performTouchInput {
             val from = pt(14f, 306f)
             down(from)
@@ -216,7 +216,7 @@ class TimelineTransitionTest {
         assertEquals(42L, st.selectedTransition)
         assertEquals(null, st.selectedCut)
         // an edit point that already has a transition: the transition is selected
-        st.transitions = listOf(UiTransition(7, 2, 7.5f, 8.5f, 0, 8f))
+        st.transitions = listOf(UiTransition(7, 7, 7.5f, 8.5f, 0, 8f))
         st.clearSelection()
         rule.waitForIdle()
         rule.onNodeWithTag("timeline").performTouchInput { down(pt(8.05f, 306f)); up() }
@@ -233,7 +233,7 @@ class TimelineTransitionTest {
     fun tappingAClipNextToATransitionSelectsTheClip() {
         val fake = FakeProps()
         // transition 12–14 s (edit point 13 s) on V1; B-roll 8–13 s
-        val st = setUp(fake) { transitions = listOf(UiTransition(7, 2, 12f, 14f, 0, 13f, from = 2, to = 3)) }
+        val st = setUp(fake) { transitions = listOf(UiTransition(7, 7, 12f, 14f, 0, 13f, from = 2, to = 3)) }
         for (sec in listOf(9f, 10f, 11f, 11.5f)) {
             st.clearSelection()
             rule.onNodeWithTag("timeline").performTouchInput { down(pt(sec, 306f)); up() }
