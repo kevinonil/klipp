@@ -311,7 +311,7 @@ fun ProgramMonitor(
                             val here = run {
                                 val t = state.playhead.toDouble()
                                 val q = controller.snapshot.playable().sequence
-                                val layers = q?.video?.take(3)?.filter { it.enabled }?.mapNotNull { tr -> tr.clips.firstOrNull { it.text == null && t >= it.start && t < it.end }?.let { tr.name to it } }.orEmpty()
+                                val layers = q?.video?.take(se.gendut.klipp.VIDEO_TRACK_COUNT)?.filter { it.enabled }?.mapNotNull { tr -> tr.clips.firstOrNull { it.text == null && t >= it.start && t < it.end }?.let { tr.name to it } }.orEmpty()
                                 val rendered = playback.renderedRanges.any { t >= it.start && t < it.endInclusive }
                                 "at the playhead: " + (if (rendered) "pre-rendered file" else "live, ${layers.size} video layer(s)") +
                                     layers.joinToString("") { (n, c) -> controller.uriOf(c.item)?.let { u -> "\n  $n: " + if (se.gendut.klipp.engine.Proxies.videoUri(u) != u) "proxy" else "original" } ?: "" } + "\n"
@@ -863,7 +863,7 @@ fun rememberWholeLook(controller: se.gendut.klipp.engine.ProjectController, play
 }
 
 /**
- * The program picture: the main player, then the upper layers (V2/V3, dissolves), then titles and captions. With
+ * The program picture: the main player, then the upper video layers (V2–V8, dissolves), then titles and captions. With
  * [wholeLook] the timeline's look is one effect over the main player and the upper layers together – a dissolve or a
  * see-through layer then looks as in the export – and the titles stay outside it, as they are drawn after the look
  * there. [between]: drawn over the main player, below the upper layers.
@@ -887,7 +887,7 @@ fun ProgramStack(
         }
         ProgramSurface(playback.player, texture, Modifier.fillMaxSize().redrawOnResize(playback, state))
         between()
-        // V2/V3, cross dissolves (and titles and captions, unless the look is drawn over the picture: see UpperLayers)
+        // V2–V8, cross dissolves (and titles and captions, unless the look is drawn over the picture: see UpperLayers)
         UpperLayers(controller, state, playback.player, gradeOf = { gs?.grades?.get(it) },
             look = if (wholeLook) se.gendut.klipp.engine.Look.NONE else playback.look, gradesKey = gs?.revision, titles = !wholeLook)
     }
