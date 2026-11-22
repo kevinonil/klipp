@@ -34,8 +34,32 @@ class TimelineTransitionTest {
     private val dir = "build/shots"
 
     /** A point in the timeline: second and height in dp below the ruler (V1 starts 280 dp down). pps = 16 dp/s. */
-    /** Test coordinates use the real full-height track layout; occupied tracks do not collapse. */
-    private fun compactTrackY(yDp: Float): Float = yDp
+    /**
+     * The test cases are written in the original full-height track coordinate system.
+     * The real timeline collapses unused tracks, but occupied/target tracks remain full.
+     * Translate by track index and local offset using the same occupancy rules as Timeline.
+     */
+    private var coordinateState: EditorState? = null
+
+    private fun compactTrackY(yDp: Float): Float {
+        val state = requireNotNull(coordinateState) { "Set coordinateState before using timeline test coordinates" }
+        var sourceTop = 0f
+        var actualTop = 0f
+        for (i in TRACKS.indices) {
+            val sourceHeight = TRACKS[i].heightDp.toFloat()
+            val full = i == VIDEO_TRACK_COUNT - 1 || i == VIDEO_TRACK_COUNT ||
+                i == state.targetVideo || i == state.targetAudio ||
+                state.clips.any { it.track == i && it.id !in state.removing }
+            val actualHeight = if (full) sourceHeight else 16f
+            if (yDp < sourceTop + sourceHeight || i == TRACKS.lastIndex) {
+                val localY = (yDp - sourceTop).coerceIn(0f, actualHeight)
+                return actualTop + localY
+            }
+            sourceTop += sourceHeight
+            actualTop += actualHeight
+        }
+        return actualTop
+    }
 
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
@@ -44,6 +68,7 @@ class TimelineTransitionTest {
 
     private fun setUp(fake: FakeProps, init: EditorState.() -> Unit = {}): EditorState {
         val st = EditorState().apply { props = fake; playhead = 30f; init() }
+        coordinateState = st
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, Tool.SELECT, Modifier.fillMaxSize()) } } }
         rule.waitForIdle()
         return st
@@ -124,6 +149,7 @@ class TimelineTransitionTest {
             Clip(2, "A003", ClipKind.AUDIO, 8, 0f, 8f, 0f, 20f, 0, item = 1, link = 7),
         )
         val st = EditorState(clips).apply { playhead = 20f; selected = 1L }
+        coordinateState = st
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, Tool.SELECT, Modifier.fillMaxSize()) } } }
         rule.waitForIdle()
         // drag the right edge (the lower part of the clip – the top corners are fade handles) from 8 s to 5 s
@@ -161,6 +187,7 @@ class TimelineTransitionTest {
     fun tappingTheCutBetweenTwoClipsSelectsItAndAddsAnyTransition() {
         val fake = FakeProps()
         val st = EditorState().apply { props = fake; playhead = 30f }
+        coordinateState = st
         rule.setContent {
             KlippTheme {
                 Box(Modifier.fillMaxSize().background(K.Bg)) {

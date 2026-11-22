@@ -36,14 +36,39 @@ class KlippUiTest {
     private fun setUp(): Pair<EditorState, AppUi> {
         val state = EditorState()
         val ui = AppUi()
+        coordinateState = state
         rule.setContent { KlippTheme { KlippApp(state, ui) } }
         rule.waitForIdle()
         return state to ui
     }
 
     /** A point in timeline coordinates (dp → px). pps = 16 dp/s, ruler 28 dp. */
-    /** Test coordinates use the real full-height track layout; occupied tracks do not collapse. */
-    private fun compactTrackY(yDp: Float): Float = yDp
+    /**
+     * The test cases are written in the original full-height track coordinate system.
+     * The real timeline collapses unused tracks, but occupied/target tracks remain full.
+     * Translate by track index and local offset using the same occupancy rules as Timeline.
+     */
+    private var coordinateState: EditorState? = null
+
+    private fun compactTrackY(yDp: Float): Float {
+        val state = requireNotNull(coordinateState) { "Set coordinateState before using timeline test coordinates" }
+        var sourceTop = 0f
+        var actualTop = 0f
+        for (i in TRACKS.indices) {
+            val sourceHeight = TRACKS[i].heightDp.toFloat()
+            val full = i == VIDEO_TRACK_COUNT - 1 || i == VIDEO_TRACK_COUNT ||
+                i == state.targetVideo || i == state.targetAudio ||
+                state.clips.any { it.track == i && it.id !in state.removing }
+            val actualHeight = if (full) sourceHeight else 16f
+            if (yDp < sourceTop + sourceHeight || i == TRACKS.lastIndex) {
+                val localY = (yDp - sourceTop).coerceIn(0f, actualHeight)
+                return actualTop + localY
+            }
+            sourceTop += sourceHeight
+            actualTop += actualHeight
+        }
+        return actualTop
+    }
 
     private fun pt(sec: Float, trackCenterDp: Float): Offset {
         val d = rule.density.density
@@ -266,6 +291,7 @@ class KlippUiTest {
     @Test
     fun copyActionSendsSelectedClip() {
         val state = EditorState()
+        coordinateState = state
         var copied: Long? = null
         state.onCopyToSource = { copied = it }
         rule.setContent { KlippTheme { KlippApp(state, AppUi()) } }
@@ -301,6 +327,7 @@ class KlippUiTest {
     @Test
     fun speedFromContextBar() {
         val state = EditorState()
+        coordinateState = state
         rule.setContent { KlippTheme { KlippApp(state, AppUi()) } }
         rule.waitForIdle()
         rule.onNodeWithTag("timeline").performTouchInput { click(pt(10.5f, v1Center)) }
