@@ -80,6 +80,8 @@ class ProjectController(
     var projectsRevision by mutableIntStateOf(0)
         private set
     private var saveJob: kotlinx.coroutines.Job? = null
+    /** Video-track migration runs once per sequence in this controller, not after every refresh/undo. */
+    private var expandedVideoTrackAnchor: Long? = null
     /** Extra UI state saved with the project (color, LUT, master volume). */
     var extraSave: () -> JSONObject = { JSONObject() }
     var onExtraRestore: (JSONObject) -> Unit = {}
@@ -683,13 +685,23 @@ class ProjectController(
     suspend fun refresh(force: Boolean = false) {
         var snap = try {
             var current = engine.snapshot()
-            // Expand existing projects in the engine itself; changing only the UI would leave
-            // preview and export unaware of the additional video tracks.
-            val haveVideo = current.sequence?.video?.size ?: 0
-            if (haveVideo in 1 until VIDEO_TRACK_COUNT) {
-                val added = engine.tryExec("sequence.addTracks", JSONObject().put("video", VIDEO_TRACK_COUNT - haveVideo))
-                if (added.isSuccess) current = engine.snapshot()
-                else onMessage("Could not add video tracks: ${added.exceptionOrNull()?.message.orEmpty()}")
+            // Expand the engine sequence itself; changing only the UI would leave preview and export
+            // unaware of the added tracks. Do this once per sequence: an undo of the migration must
+            // not be immediately undone by another refresh.
+            val sequence = current.sequence
+            val anchor = sequence?.video?.firstOrNull()?.id
+            if (anchor == null) {
+                expandedVideoTrackAnchor = null
+            } else if (sequence.video.size >= VIDEO_TRACK_COUNT) {
+                expandedVideoTrackAnchor = anchor
+            } else if (expandedVideoTrackAnchor != anchor) {
+                val added = engine.tryExec("sequence.addTracks", JSONObject().put("video", VIDEO_TRACK_COUNT - sequence.video.size))
+                if (added.isSuccess) {
+                    current = engine.snapshot()
+                    expandedVideoTrackAnchor = anchor
+                } else {
+                    onMessage("Could not add video tracks: ${added.exceptionOrNull()?.message.orEmpty()}")
+                }
             }
             current
         } catch (e: CancellationException) {
