@@ -183,7 +183,7 @@ class KlippUiTest {
         // The playhead is at 14 s in the middle. Drag the empty V2 lane right 1.1 s → 12.9 s → snaps to the clip edge at 13 s.
         val tl = rule.onNodeWithTag("timeline")
         tl.performTouchInput {
-            val from = Offset(width * 0.75f, (28f + 40f + 20f) * density)
+            val from = Offset(width * 0.75f, (28f + 260f) * density)
             down(from)
             for (i in 1..12) moveTo(Offset(from.x + 1.1f * 16f * density * i / 12, from.y))
             up()
