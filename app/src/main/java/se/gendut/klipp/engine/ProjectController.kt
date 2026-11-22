@@ -690,7 +690,7 @@ class ProjectController(
             // not be immediately undone by another refresh.
             val sequence = current.sequence
             val anchor = sequence?.video?.firstOrNull()?.id
-            if (anchor == null) {
+            if (sequence == null || anchor == null) {
                 expandedVideoTrackAnchor = null
             } else if (sequence.video.size >= VIDEO_TRACK_COUNT) {
                 expandedVideoTrackAnchor = anchor
