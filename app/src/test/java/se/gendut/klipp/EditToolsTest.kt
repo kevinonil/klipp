@@ -37,9 +37,18 @@ class EditToolsTest {
     private val dir = "build/shots"
 
     /** Second and height in dp below the ruler (V8 20, V7 60, V6 100, V5 140, V4 180, V3 220, V2 260, V1 306, A1 354, A2 398, A3 442). pps = 16 dp/s. */
+    /** Convert the original full-height track coordinates to the current compact empty-lane layout. */
+    private fun compactTrackY(yDp: Float): Float {
+        val oldBounds = floatArrayOf(0f, 40f, 80f, 120f, 160f, 200f, 240f, 280f, 332f, 376f, 420f, 464f)
+        val newBounds = floatArrayOf(0f, 16f, 32f, 48f, 64f, 80f, 120f, 160f, 212f, 256f, 300f, 344f)
+        val row = (0 until oldBounds.lastIndex).firstOrNull { yDp < oldBounds[it + 1] } ?: oldBounds.lastIndex - 1
+        val fraction = ((yDp - oldBounds[row]) / (oldBounds[row + 1] - oldBounds[row])).coerceIn(0f, 1f)
+        return newBounds[row] + fraction * (newBounds[row + 1] - newBounds[row])
+    }
+
     private fun pt(sec: Float, yDp: Float): Offset {
         val d = rule.density.density
-        return Offset(sec * 16f * d, (28f + yDp) * d)
+        return Offset(sec * 16f * d, (28f + compactTrackY(yDp)) * d)
     }
 
     private fun timeline(st: EditorState, tool: Tool = Tool.SELECT) {
