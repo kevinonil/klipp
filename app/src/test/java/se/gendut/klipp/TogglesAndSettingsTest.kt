@@ -141,7 +141,7 @@ class TogglesAndSettingsTest {
         rule.setContent { KlippTheme { Box(Modifier.fillMaxSize().background(K.Bg)) { Timeline(st, Tool.SELECT, Modifier.fillMaxSize()) } } }
         rule.waitForIdle()
         rule.onNodeWithTag("trackToggle:V1").performClick()
-        rule.onNodeWithTag("trackToggle:A2").performScrollTo().performClick()
+        rule.onNodeWithTag("trackToggle:A2").performClick()
         rule.waitForIdle()
         assertFalse("V1 hidden", st.trackStates[2].enabled)
         assertTrue("A2 muted", st.trackStates[4].muted)
